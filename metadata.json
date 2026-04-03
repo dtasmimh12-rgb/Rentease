@@ -1,0 +1,5 @@
+{
+  "name": "RentEase",
+  "description": "Modern house rental platform with separate Landlord and Tenant interfaces, real-time chat, and property management.",
+  "requestFramePermissions": ["geolocation"]
+}
