@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, UserRole } from '../types';
 
 interface AuthContextType {
@@ -22,11 +22,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
-        } else {
+        try {
+          const docRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setProfile(docSnap.data() as UserProfile);
+          } else {
+            setProfile(null);
+          }
+        } catch (err) {
+          console.error('Error fetching profile:', err);
           setProfile(null);
         }
       } else {
@@ -50,8 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       searchHistory: [],
       createdAt: new Date().toISOString(),
     };
-    await setDoc(doc(db, 'users', user.uid), newProfile);
-    setProfile(newProfile);
+    try {
+      await setDoc(doc(db, 'users', user.uid), newProfile);
+      setProfile(newProfile);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `users/${user.uid}`);
+    }
   };
 
   return (
