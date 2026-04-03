@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, deleteDoc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { Property } from '../types';
 import PropertyCard from './PropertyCard';
@@ -26,6 +26,8 @@ export default function Favorites() {
       }));
       setFavorites(favData.filter(p => p !== null) as Property[]);
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `users/${user.uid}/favorites`);
     });
     return unsubscribe;
   }, [user]);

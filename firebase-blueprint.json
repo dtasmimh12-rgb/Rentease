@@ -10,7 +10,10 @@
         "name": { "type": "string" },
         "role": { "type": "string", "enum": ["landlord", "tenant"] },
         "photoURL": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "phone": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "searchHistory": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["uid", "email", "role"]
     },
@@ -26,45 +29,28 @@
         "location": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string" } },
         "type": { "type": "string" },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "isFeatured": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["available", "rented"] },
+        "views": { "type": "number" },
+        "clicks": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["ownerId", "title", "price", "location"]
     },
-    "Chat": {
-      "title": "Chat",
-      "description": "Chat session between landlord and tenant",
+    "Visit": {
+      "title": "Visit",
+      "description": "Scheduled property visit",
       "type": "object",
       "properties": {
-        "participants": { "type": "array", "items": { "type": "string" } },
-        "lastMessage": { "type": "string" },
-        "lastMessageAt": { "type": "string", "format": "date-time" },
-        "propertyId": { "type": "string" }
-      },
-      "required": ["participants"]
-    },
-    "Message": {
-      "title": "Message",
-      "description": "Individual chat message",
-      "type": "object",
-      "properties": {
-        "chatId": { "type": "string" },
-        "senderId": { "type": "string" },
-        "text": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["chatId", "senderId", "text"]
-    },
-    "Favorite": {
-      "title": "Favorite",
-      "description": "User's favorite property",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
         "propertyId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "tenantId": { "type": "string" },
+        "landlordId": { "type": "string" },
+        "scheduledAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] }
       },
-      "required": ["userId", "propertyId"]
+      "required": ["propertyId", "tenantId", "landlordId", "scheduledAt"]
     }
   },
   "firestore": {
@@ -72,6 +58,7 @@
     "properties/{propertyId}": { "schema": "Property", "description": "Property listings" },
     "chats/{chatId}": { "schema": "Chat", "description": "Chat sessions" },
     "chats/{chatId}/messages/{messageId}": { "schema": "Message", "description": "Messages within a chat" },
-    "users/{userId}/favorites/{favoriteId}": { "schema": "Favorite", "description": "User favorites" }
+    "users/{userId}/favorites/{favoriteId}": { "schema": "Favorite", "description": "User favorites" },
+    "visits/{visitId}": { "schema": "Visit", "description": "Scheduled visits" }
   }
 }

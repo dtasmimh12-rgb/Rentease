@@ -6,6 +6,9 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   photoURL?: string;
+  phone?: string;
+  verified?: boolean;
+  searchHistory?: string[];
   createdAt: string;
 }
 
@@ -18,8 +21,22 @@ export interface Property {
   location: string;
   images: string[];
   type: string;
+  amenities: string[];
+  isFeatured: boolean;
+  status: 'available' | 'rented';
+  views: number;
+  clicks: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Visit {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  landlordId: string;
+  scheduledAt: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
 }
 
 export interface Chat {

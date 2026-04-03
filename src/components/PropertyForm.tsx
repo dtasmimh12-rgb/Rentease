@@ -17,14 +17,26 @@ export default function PropertyForm({ initialData, onSubmit, onClose }: Propert
     location: initialData?.location || '',
     type: initialData?.type || 'Apartment',
     images: initialData?.images || [],
+    amenities: initialData?.amenities || [],
+    status: initialData?.status || 'available',
   });
   const [loading, setLoading] = useState(false);
+  const [newAmenity, setNewAmenity] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        updatedAt: new Date().toISOString(),
+        ...(initialData ? {} : { 
+          createdAt: new Date().toISOString(),
+          views: 0,
+          clicks: 0,
+          isFeatured: false 
+        })
+      });
       onClose();
     } catch (err) {
       console.error(err);
@@ -109,6 +121,68 @@ export default function PropertyForm({ initialData, onSubmit, onClose }: Propert
                 <option>Villa</option>
                 <option>Condo</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'available' | 'rented' })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              >
+                <option value="available">Available</option>
+                <option value="rented">Rented</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">Amenities</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newAmenity}
+                onChange={(e) => setNewAmenity(e.target.value)}
+                placeholder="WiFi, Parking, Gym..."
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (newAmenity.trim()) {
+                      setFormData({ ...formData, amenities: [...formData.amenities, newAmenity.trim()] });
+                      setNewAmenity('');
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (newAmenity.trim()) {
+                    setFormData({ ...formData, amenities: [...formData.amenities, newAmenity.trim()] });
+                    setNewAmenity('');
+                  }
+                }}
+                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.amenities.map((amenity, i) => (
+                <span key={i} className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm flex items-center gap-1">
+                  {amenity}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, amenities: formData.amenities.filter((_, idx) => idx !== i) })}
+                    className="hover:text-blue-800"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
             </div>
           </div>
 

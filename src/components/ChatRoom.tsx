@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { Message, UserProfile, Chat, Property } from '../types';
 import { Send, ChevronLeft, Info, Home } from 'lucide-react';
@@ -51,6 +51,8 @@ export default function ChatRoom() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message)));
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `chats/${id}/messages`);
     });
 
     return unsubscribe;

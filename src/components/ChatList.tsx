@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, orderBy, doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { Chat, UserProfile } from '../types';
 import { Link } from 'react-router-dom';
@@ -34,6 +34,8 @@ export default function ChatList() {
       }));
       setChats(chatData);
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'chats');
     });
 
     return unsubscribe;

@@ -45,6 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: user.displayName || 'User',
       role,
       photoURL: user.photoURL || undefined,
+      phone: user.phoneNumber || undefined,
+      verified: false,
+      searchHistory: [],
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, 'users', user.uid), newProfile);

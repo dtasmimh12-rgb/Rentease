@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { Property } from '../types';
 import PropertyCard from './PropertyCard';
 import PropertyForm from './PropertyForm';
-import { Plus, Home, LayoutGrid, List } from 'lucide-react';
+import { Plus, Home, Eye, MousePointer2, Building2, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function LandlordDashboard() {
@@ -22,6 +22,8 @@ export default function LandlordDashboard() {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
       setProperties(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'properties');
     });
     return unsubscribe;
   }, [user]);
@@ -33,6 +35,9 @@ export default function LandlordDashboard() {
       ownerId: user.uid,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      views: 0,
+      clicks: 0,
+      isFeatured: false,
     });
   };
 
@@ -50,11 +55,22 @@ export default function LandlordDashboard() {
     }
   };
 
+  const handleBoost = async (propertyId: string, currentFeatured: boolean) => {
+    try {
+      await updateDoc(doc(db, 'properties', propertyId), {
+        isFeatured: !currentFeatured,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `properties/${propertyId}`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Your Listings</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Landlord Dashboard</h1>
           <p className="text-gray-500 mt-1">Manage and track your rental properties</p>
         </div>
         <button
@@ -64,6 +80,24 @@ export default function LandlordDashboard() {
           <Plus className="w-5 h-5" />
           Add Property
         </button>
+      </div>
+
+      {/* Analytics Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Listings', value: properties.length, icon: Building2, color: 'blue' },
+          { label: 'Total Views', value: properties.reduce((acc, p) => acc + (p.views || 0), 0), icon: Eye, color: 'purple' },
+          { label: 'Total Clicks', value: properties.reduce((acc, p) => acc + (p.clicks || 0), 0), icon: MousePointer2, color: 'amber' },
+          { label: 'Active Chats', value: '5', icon: MessageSquare, color: 'green' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center mb-4`}>
+              <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
+            </div>
+            <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+          </div>
+        ))}
       </div>
 
       {loading ? (
@@ -85,6 +119,7 @@ export default function LandlordDashboard() {
                   setEditingProperty(property);
                   setShowForm(true);
                 }}
+                onBoost={() => handleBoost(property.id, property.isFeatured)}
               />
             ))}
           </AnimatePresence>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Property } from '../types';
-import { MapPin, DollarSign, Heart, Trash2, Edit } from 'lucide-react';
+import { MapPin, DollarSign, Heart, Trash2, Edit, Eye, MousePointer2, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -12,6 +12,7 @@ interface PropertyCardProps {
   onToggleFavorite?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
+  onBoost?: () => void;
 }
 
 export default function PropertyCard({ 
@@ -20,15 +21,25 @@ export default function PropertyCard({
   isFavorite, 
   onToggleFavorite, 
   onDelete, 
-  onEdit 
+  onEdit,
+  onBoost
 }: PropertyCardProps) {
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group"
+      className={cn(
+        "bg-white rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow group relative",
+        property.isFeatured ? "border-amber-200 ring-1 ring-amber-100" : "border-gray-100"
+      )}
     >
+      {property.isFeatured && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-1 px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wider shadow-lg">
+          <Star className="w-3 h-3 fill-current" /> Featured
+        </div>
+      )}
+
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={property.images[0] || `https://picsum.photos/seed/${property.id}/800/600`}
@@ -36,7 +47,7 @@ export default function PropertyCard({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
           {!isOwner && (
             <button
               onClick={(e) => {
@@ -53,6 +64,19 @@ export default function PropertyCard({
           )}
           {isOwner && (
             <>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onBoost?.();
+                }}
+                className={cn(
+                  "p-2 rounded-full backdrop-blur-md transition-colors",
+                  property.isFeatured ? "bg-amber-500 text-white" : "bg-white/80 text-amber-600 hover:bg-amber-500 hover:text-white"
+                )}
+                title="Boost Listing"
+              >
+                <Star className="w-5 h-5" />
+              </button>
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -75,10 +99,17 @@ export default function PropertyCard({
           )}
         </div>
         <div className="absolute bottom-4 left-4">
-          <span className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+          <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
             {property.type}
           </span>
         </div>
+        {property.status === 'rented' && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+            <span className="px-6 py-2 bg-white/90 text-gray-900 font-bold rounded-full uppercase tracking-widest text-sm shadow-xl">
+              Rented
+            </span>
+          </div>
+        )}
       </div>
 
       <Link to={`/property/${property.id}`} className="p-5 block">
@@ -96,11 +127,24 @@ export default function PropertyCard({
           <span className="truncate">{property.location}</span>
         </div>
 
+        {isOwner && (
+          <div className="flex items-center gap-4 mb-4 p-2 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <Eye className="w-3 h-3" />
+              <span>{property.views || 0} views</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <MousePointer2 className="w-3 h-3" />
+              <span>{property.clicks || 0} clicks</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-          <span className="text-xs text-gray-400">
-            Added {new Date(property.createdAt).toLocaleDateString()}
+          <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">
+            {new Date(property.createdAt).toLocaleDateString()}
           </span>
-          <span className="text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
+          <span className="text-blue-600 text-sm font-bold group-hover:translate-x-1 transition-transform">
             View Details →
           </span>
         </div>
